@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Terminal} from 'xterm';
-import {FitAddon} from 'xterm-addon-fit';
+import { Terminal } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css';
 import {
   serial as polyfill, SerialPort as SerialPortPolyfill,
@@ -90,7 +90,7 @@ term.onData((data) => {
  * @return {PortOption}
  */
 function findPortOption(port: SerialPort | SerialPortPolyfill):
-    PortOption | null {
+  PortOption | null {
   for (let i = 0; i < portSelector.options.length; ++i) {
     const option = portSelector.options[i];
     if (option.value === 'prompt') {
@@ -152,8 +152,8 @@ function downloadTerminalContents(): void {
   const contents = term.getSelection();
   term.clearSelection();
   const linkContent = URL.createObjectURL(
-      new Blob([new TextEncoder().encode(contents).buffer],
-          {type: 'text/plain'}));
+    new Blob([new TextEncoder().encode(contents).buffer],
+      { type: 'text/plain' }));
   const fauxLink = document.createElement('a');
   fauxLink.download = `terminal_content_${new Date().getTime()}.txt`;
   fauxLink.href = linkContent;
@@ -238,7 +238,7 @@ async function connectToPort(): Promise<void> {
     parity: paritySelector.value as ParityType,
     stopBits: Number.parseInt(stopBitsSelector.value),
     flowControl:
-        flowControlCheckbox.checked ? <const> 'hardware' : <const> 'none',
+      flowControlCheckbox.checked ? <const>'hardware' : <const>'none',
     bufferSize,
 
     // Prior to Chrome 86 these names were used.
@@ -261,6 +261,10 @@ async function connectToPort(): Promise<void> {
 
   try {
     await port.open(options);
+    await port.setSignals({ requestToSend: true });
+    await port.setSignals({ dataTerminalReady: true });
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await port.setSignals({ dataTerminalReady: false });
     term.writeln('<CONNECTED>');
     connectButton.textContent = 'Disconnect';
     connectButton.disabled = false;
@@ -276,22 +280,22 @@ async function connectToPort(): Promise<void> {
   while (port && port.readable) {
     try {
       try {
-        reader = port.readable.getReader({mode: 'byob'});
+        reader = port.readable.getReader({ mode: 'byob' });
       } catch {
         reader = port.readable.getReader();
       }
 
       let buffer = null;
-      for (;;) {
-        const {value, done} = await (async () => {
+      for (; ;) {
+        const { value, done } = await (async () => {
           if (reader instanceof ReadableStreamBYOBReader) {
             if (!buffer) {
               buffer = new ArrayBuffer(bufferSize);
             }
-            const {value, done} =
-                await reader.read(new Uint8Array(buffer, 0, bufferSize));
+            const { value, done } =
+              await reader.read(new Uint8Array(buffer, 0, bufferSize));
             buffer = value?.buffer;
-            return {value, done};
+            return { value, done };
           } else {
             return await reader.read();
           }
@@ -401,19 +405,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   customBaudRateInput =
-      document.getElementById('custom_baudrate') as HTMLInputElement;
+    document.getElementById('custom_baudrate') as HTMLInputElement;
   dataBitsSelector = document.getElementById('databits') as HTMLSelectElement;
   paritySelector = document.getElementById('parity') as HTMLSelectElement;
   stopBitsSelector = document.getElementById('stopbits') as HTMLSelectElement;
   flowControlCheckbox = document.getElementById('rtscts') as HTMLInputElement;
   echoCheckbox = document.getElementById('echo') as HTMLInputElement;
   flushOnEnterCheckbox =
-      document.getElementById('enter_flush') as HTMLInputElement;
+    document.getElementById('enter_flush') as HTMLInputElement;
   autoconnectCheckbox =
-      document.getElementById('autoconnect') as HTMLInputElement;
+    document.getElementById('autoconnect') as HTMLInputElement;
 
   const convertEolCheckbox =
-      document.getElementById('convert_eol') as HTMLInputElement;
+    document.getElementById('convert_eol') as HTMLInputElement;
   const convertEolCheckboxHandler = () => {
     term.options.convertEol = convertEolCheckbox.checked;
   };
